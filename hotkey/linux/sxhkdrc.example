@@ -1,0 +1,11 @@
+# pasteimg -- sxhkd binding (i3, bspwm, and other X11 WMs).
+# Append to ~/.config/sxhkd/sxhkdrc, then: pkill -USR1 -x sxhkd
+
+super + shift + v
+    ~/.local/bin/pasteimg
+
+# i3 users can skip sxhkd and put this in ~/.config/i3/config instead:
+#   bindsym $mod+Shift+v exec --no-startup-id ~/.local/bin/pasteimg
+#
+# Hyprland (~/.config/hypr/hyprland.conf):
+#   bind = SUPER SHIFT, V, exec, ~/.local/bin/pasteimg
