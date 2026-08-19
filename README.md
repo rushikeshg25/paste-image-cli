@@ -360,7 +360,8 @@ python3 -m unittest discover -s tests -t .
 The tests use only `unittest`. The core flow is exercised through an in-memory
 clipboard implementation, so most behavior is testable without changing the
 real clipboard. Backend tests cover platform-specific parsing and process
-behavior.
+behavior. GitHub Actions runs the compile check, CLI smoke test, and full suite
+on Ubuntu and macOS with Python 3.9 and Python 3.14.
 
 Current platform status:
 

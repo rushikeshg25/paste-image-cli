@@ -73,23 +73,13 @@ class Clipboard(ABC):
         return shutil.which(binary) is not None
 
     @staticmethod
-    def _run(
-        cmd: list[str],
-        *,
-        stdin: bytes | None = None,
-        check: bool = True,
-        capture_output: bool = True,
-    ) -> subprocess.CompletedProcess[bytes]:
-        """Run a command and optionally capture bytes; wrap checked failures."""
+    def _run(cmd: list[str], *, stdin: bytes | None = None, check: bool = True) -> subprocess.CompletedProcess[bytes]:
+        """Run a command, capturing bytes. Raises BackendError when check and it fails."""
         try:
-            proc = subprocess.run(cmd, input=stdin, capture_output=capture_output, check=False)
+            proc = subprocess.run(cmd, input=stdin, capture_output=True, check=False)
         except FileNotFoundError as exc:
             raise BackendError(f"{cmd[0]} not found") from exc
         if check and proc.returncode != 0:
-            detail = (
-                proc.stderr.decode("utf-8", "replace").strip()
-                if proc.stderr is not None
-                else f"exit {proc.returncode}"
-            )
+            detail = proc.stderr.decode("utf-8", "replace").strip() or f"exit {proc.returncode}"
             raise BackendError(f"{cmd[0]} failed: {detail}")
         return proc
