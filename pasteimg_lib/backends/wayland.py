@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
-from .base import IMAGE_EXTENSIONS, IMAGE_FILE_SUFFIXES, Clipboard
+from .base import IMAGE_EXTENSIONS, IMAGE_FILE_SUFFIXES, BackendError, Clipboard
 
 
 class WaylandClipboard(Clipboard):
@@ -48,7 +48,22 @@ class WaylandClipboard(Clipboard):
         return _parse_uri_list(proc.stdout.decode("utf-8", "replace"))
 
     def write_text(self, text: str) -> None:
-        self._run(["wl-copy", "--type", "text/plain"], stdin=text.encode("utf-8"))
+        # wl-copy forks a clipboard-serving child. Do not capture output here:
+        # that child inherits the pipes and would keep subprocess.run waiting
+        # for EOF until something else replaces the clipboard.
+        cmd = ["wl-copy", "--type", "text/plain"]
+        try:
+            proc = subprocess.run(
+                cmd,
+                input=text.encode("utf-8"),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+        except FileNotFoundError as exc:
+            raise BackendError("wl-copy not found") from exc
+        if proc.returncode != 0:
+            raise BackendError(f"wl-copy failed: exit {proc.returncode}")
 
     def notify(self, title: str, body: str) -> None:
         _notify_send(title, body)
