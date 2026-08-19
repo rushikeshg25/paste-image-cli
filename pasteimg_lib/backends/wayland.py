@@ -48,7 +48,14 @@ class WaylandClipboard(Clipboard):
         return _parse_uri_list(proc.stdout.decode("utf-8", "replace"))
 
     def write_text(self, text: str) -> None:
-        self._run(["wl-copy", "--type", "text/plain"], stdin=text.encode("utf-8"))
+        # wl-copy forks a clipboard-serving child. Do not capture output here:
+        # that child inherits the pipes and would keep subprocess.run waiting
+        # for EOF until something else replaces the clipboard.
+        self._run(
+            ["wl-copy", "--type", "text/plain"],
+            stdin=text.encode("utf-8"),
+            capture_output=False,
+        )
 
     def notify(self, title: str, body: str) -> None:
         _notify_send(title, body)
